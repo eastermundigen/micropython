@@ -5,14 +5,14 @@ Copyright (c) 2017 Fabian Affolter <fabian@affolter-engineering.ch>
 
 Licensed under MIT. All rights reserved.
 """
+import machine
 import dht
 import time
-import machine
 
 from umqtt.simple import MQTTClient
 
-BROKER = 'xxxx'
-DEVICE_ID = 'unit020' # Not useful for me: ubinascii.hexlify(machine.unique_id())
+import configuration
+
 STATE_TOPIC = b"homeassistant/sensor/{0}_{1}/state"
 CONFIG_TOPIC = b"homeassistant/sensor/{0}_{1}/config"
 DHT_PIN = 5
@@ -21,18 +21,18 @@ MIN_DEVIATION = 5
 
 SENSOR_DETAILS = [
     [
-        STATE_TOPIC.format(DEVICE_ID, 'temp'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'temp'),
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'temp'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'temp'),
         b'{"name": "temperature", "unit_of_measurement": "°C"}'
     ],
     [
-        STATE_TOPIC.format(DEVICE_ID, 'hum'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'hum'),
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'hum'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'hum'),
         b'{"name": "humidity", "unit_of_measurement": "%"}'
     ],
     [
-        STATE_TOPIC.format(DEVICE_ID, 'brig'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'brig'),
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'brig'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'brig'),
         b'{"name": "brightness", "unit_of_measurement": "ca"}'],
 ]
 
@@ -49,9 +49,9 @@ def check_bound(new_value, previous_value, max_difference):
 
 def connect_and_subscribe():
     global client
-    client = MQTTClient(DEVICE_ID, BROKER)
+    client = MQTTClient(configuration.DEVICE_ID, configuration.MQTT_BROKER)
     client.connect()
-    print("connected to mqtt broker {}".format(BROKER))
+    print("connected to mqtt broker {}".format(configuration.MQTT_BROKER))
     for sensor in SENSOR_DETAILS:
         client.publish(sensor[1], sensor[2], retain=True)
 

@@ -10,14 +10,14 @@ import machine
 
 from umqtt.simple import MQTTClient
 
+import configuration
+
 BLUE_PIN = 13
-BROKER = 'xxxx'
 BUTTON_PIN = 4
 CONFIG_TOPIC = b"homeassistant/switch/{0}_{1}/config"
 CONTROL_TOPIC = b"homeassistant/switch/{0}_{1}/set"
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
-DEVICE_ID = 'unit020'
 GREEN_PIN = 12
 RED_PIN = 15
 RELAY_PIN = 0
@@ -26,22 +26,22 @@ STATE_TOPIC = b"homeassistant/switch/{0}_{1}/state"
 SWITCH_DETAILS = [
     [
         # This pin is controlled with the button.
-        STATE_TOPIC.format(DEVICE_ID, 'relay'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'relay'),
-        CONTROL_TOPIC.format(DEVICE_ID, 'relay'),
-        b'{"name": "relay", "command_topic": "%s"}' % CONTROL_TOPIC.format(DEVICE_ID, 'relay')
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'relay'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'relay'),
+        CONTROL_TOPIC.format(configuration.DEVICE_ID, 'relay'),
+        b'{"name": "relay", "command_topic": "%s"}' % CONTROL_TOPIC.format(configuration.DEVICE_ID, 'relay')
     ],
     [
-        STATE_TOPIC.format(DEVICE_ID, 'red'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'red'),
-        CONTROL_TOPIC.format(DEVICE_ID, 'red'),
-        b'{"name": "red", "command_topic": "%s"}' % CONTROL_TOPIC.format(DEVICE_ID, 'red')
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'red'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'red'),
+        CONTROL_TOPIC.format(configuration.DEVICE_ID, 'red'),
+        b'{"name": "red", "command_topic": "%s"}' % CONTROL_TOPIC.format(configuration.DEVICE_ID, 'red')
     ],
     [
-        STATE_TOPIC.format(DEVICE_ID, 'blue'),
-        CONFIG_TOPIC.format(DEVICE_ID, 'blue'),
-        CONTROL_TOPIC.format(DEVICE_ID, 'blue'),
-        b'{"name": "blue", "command_topic": "%s"}' % CONTROL_TOPIC.format(DEVICE_ID, 'blue')
+        STATE_TOPIC.format(configuration.DEVICE_ID, 'blue'),
+        CONFIG_TOPIC.format(configuration.DEVICE_ID, 'blue'),
+        CONTROL_TOPIC.format(configuration.DEVICE_ID, 'blue'),
+        b'{"name": "blue", "command_topic": "%s"}' % CONTROL_TOPIC.format(configuration.DEVICE_ID, 'blue')
     ]
 ]
 
@@ -65,7 +65,7 @@ def message_callback(topic, msg):
             led_green.low()
             publish_state(SWITCH_DETAILS[0][0])
         else:
-            print("unknown mtqq message payload, ignoring...")
+            print("unknown mqtt message payload, ignoring...")
     if topic.decode('utf-8') == SWITCH_DETAILS[1][2]:
         if msg.decode('utf-8') == DEFAULT_PAYLOAD_ON:
             led_red.high()
@@ -74,7 +74,7 @@ def message_callback(topic, msg):
             led_red.low()
             publish_state(SWITCH_DETAILS[1][0])
         else:
-            print("unknown mtqq message payload, ignoring...")
+            print("unknown mqtt message payload, ignoring...")
     if topic.decode('utf-8') == SWITCH_DETAILS[2][2]:
         if msg == b"ON":
             led_blue.high()
@@ -83,7 +83,7 @@ def message_callback(topic, msg):
             led_blue.low()
             publish_state(SWITCH_DETAILS[2][0])
         else:
-            print("unknown mtqq message payload, ignoring...")
+            print("unknown mqtt message payload, ignoring...")
 
 def publish_state(topic):
     if relay.value() or led_green.value() or led_blue.value() or led_red.value():
@@ -93,17 +93,17 @@ def publish_state(topic):
 
 def connect_and_subscribe():
     global client
-    client = MQTTClient(DEVICE_ID, BROKER)
+    client = MQTTClient(configuration.DEVICE_ID, configuration.MQTT_BROKER)
     client.set_callback(message_callback)
     client.connect()
-    print("connected to {}".format(BROKER))
+    print("connected to {}".format(configuration.MQTT_BROKER))
 
     for switch in SWITCH_DETAILS:
         client.publish(switch[1], switch[3], retain=True)
         client.subscribe(switch[2])
         print("subscribed to {}".format(switch[2]))
 
-print("Start setup of pins...")
+print("start setup of pins...")
 relay = machine.Pin(RELAY_PIN, machine.Pin.OUT, value=0)
 led_green = machine.Pin(GREEN_PIN, machine.Pin.OUT, value=0)
 led_blue = machine.Pin(BLUE_PIN, machine.Pin.OUT, value=0)
