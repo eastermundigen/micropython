@@ -11,15 +11,13 @@ import webrepl
 import os
 import machine
 import ubinascii
+import network
+
+import configuration
 
 gc.collect()
 
 def connect():
-    import network
-
-    SSID = 'xxxx'
-    PASSWORD = 'xxxx'
-
     sta_if = network.WLAN(network.STA_IF)
     ap_if = network.WLAN(network.AP_IF)
     if ap_if.active():
@@ -27,7 +25,8 @@ def connect():
     if not sta_if.isconnected():
         print("connecting to network...")
         sta_if.active(True)
-        sta_if.connect(SSID, PASSWORD)
+        sta_if.connect(configuration.DEFAULT_WIFI_SSID,
+                       configuration.DEFAULT_WIFI_PASSWORD)
         while not sta_if.isconnected():
             pass
     print("ip address:", sta_if.ifconfig()[0])
@@ -37,6 +36,13 @@ def connect():
     mac_address = network.WLAN().config('mac')
     binaryToAscii = ubinascii.hexlify(mac_address, ':')
     print("mac address:", binaryToAscii.decode())
+
+    if not sta_if.isconnected():
+        ap = network.WLAN(network.AP_IF)
+        ap.active(True)
+        ap.config(essid=configuration.CONFIG_WIFI_SSID,
+                  authmode=network.AUTH_WPA_WPA2_PSK,
+                  password=configuration.CONFIG_WIFI_PASSWORD)
 
 connect()
 webrepl.start()
